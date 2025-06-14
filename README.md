@@ -51,11 +51,10 @@ DB_TYPE=postgres
 DB_HOST=localhost
 DB_USER=your_user
 DB_PASSWORD=your_secure_password
-DB_NAME=test_db
-DB_PORT=5432
+DB_NAME=database_name
 DB_DRIVER={ODBC Driver 17 for SQL Server}
 ORACLE_SID=XE
-ORACLE_PORT=1521
+ORACLE_DB_PORT=1521
 ```
 ### Loading `.env` in Code
 ```pycon
@@ -100,6 +99,16 @@ db.execute_query("SELECT * FROM customers")
 print(db.fetch_all())
 db.close()
 ```
+```pycon
+db = SQLPyHelper()
+
+# Fetch rows where customer_id = 3
+customers = db.fetch_by_param("customers", "id", 3)
+print(customers)
+
+db.close()
+```
+
 ### SQL Server Example
 ```pycon
 db = SQLPyHelper()
