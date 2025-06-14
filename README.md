@@ -153,6 +153,7 @@ We welcome contributions from the **open-source community**! Follow these steps 
 
 ---
 ## ☕ Support the Project
-If you find SQLPyHelper useful, consider buying me a coffee to support continued development!
+
+If you find SQLPyHelper useful, consider buying me a coffee to support continued development! 
 Donate Here: [PayPal](https://paypal.me/adebayopeter?country.x=GB&locale.x=en_GB)
 ---
