@@ -33,7 +33,6 @@ setup(
         "Intended Audience :: Developers",
         "Topic :: Database :: Database Engines/Servers",
         "Operating System :: OS Independent"
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent"
+        "License :: OSI Approved :: MIT License"
     ],
 )
