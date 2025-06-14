@@ -32,7 +32,7 @@ setup(
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Topic :: Database :: Database Engines/Servers",
-        "Operating System :: OS Independent"
+        "Operating System :: OS Independent",
         "License :: OSI Approved :: MIT License"
     ],
 )
