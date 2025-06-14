@@ -1,14 +1,14 @@
-import sqlite3
-import psycopg2
-import mysql.connector
-import pyodbc
-import cx_Oracle
 import csv
-from psycopg2 import pool
 from dotenv import load_dotenv
 import os
 
 load_dotenv()  # Load environment variables from .env file
+
+
+def log_query(query):
+    """Logs queries for debugging purposes."""
+    with open("query_log.txt", "a") as f:
+        f.write(query + "\n")
 
 
 class SQLPyHelper:
@@ -20,19 +20,25 @@ class SQLPyHelper:
         self.database = os.getenv("DB_NAME")
         self.driver = os.getenv("DB_DRIVER")
         self.oracle_sid = os.getenv("ORACLE_SID")
+        self.pool = None
 
         if self.db_type == "sqlite":
+            import sqlite3
             self.connection = sqlite3.connect(self.database)
         elif self.db_type == "postgres":
+            import psycopg2
             self.connection = psycopg2.connect(host=self.host, user=self.user,
                                                password=self.password, dbname=self.database)
         elif self.db_type == "mysql":
+            import mysql.connector
             self.connection = mysql.connector.connect(host=self.host, user=self.user,
                                                       password=self.password, database=self.database)
         elif self.db_type == "sqlserver":
+            import pyodbc
             self.connection = pyodbc.connect(f"DRIVER={self.driver};SERVER={self.host};DATABASE={self.database};"
                                              f"UID={self.user};PWD={self.password}")
         elif self.db_type == "oracle":
+            import cx_Oracle
             oracle_port = os.getenv("ORACLE_DB_PORT", "1521")  # Default to 1521 if not set
             dsn = cx_Oracle.makedsn(self.host, oracle_port, self.oracle_sid)
             self.connection = cx_Oracle.connect(self.user, self.password, dsn)
@@ -52,9 +58,17 @@ class SQLPyHelper:
         except Exception as e:
             print(f"Error executing query: {e}")
 
+    def fetch_one(self):
+        return self.cursor.fetchone()
+
     def fetch_all(self):
         """Fetches all rows from the last executed query"""
         return self.cursor.fetchall()
+
+    def fetch_by_param(self, table_name, column_name, value):
+        query = f"SELECT * FROM {table_name} WHERE {column_name} = %s"
+        self.cursor.execute(query, (value,))
+        return self.cursor.fetchall()  # Fetch matching rows
 
     def close(self):
         """Closes the connection"""
@@ -84,11 +98,6 @@ class SQLPyHelper:
         self.cursor.executemany(query, values)
         self.connection.commit()
 
-    def log_query(self, query):
-        """Logs queries for debugging purposes."""
-        with open("query_log.txt", "a") as f:
-            f.write(query + "\n")
-
     def backup_table(self, table_name, backup_file):
         """
         Exports table data into a CSV file.
@@ -110,6 +119,7 @@ class SQLPyHelper:
         Example:
         setup_postgres_pool(min_conn=2, max_conn=10)
         """
+        from psycopg2 import pool
         self.pool = pool.SimpleConnectionPool(min_conn, max_conn,
                                               host=self.host,
                                               user=self.user,
@@ -123,6 +133,3 @@ class SQLPyHelper:
     def return_connection_to_pool(self, conn):
         """Returns a connection back to the pool."""
         self.pool.putconn(conn)
-
-
-
