@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name='SQLPyHelper',
-    version='0.1.1',
+    version='0.1.2',
     description='A simple SQL database helper package for Python.',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -19,6 +19,13 @@ setup(
         'cx_Oracle',
         'python-dotenv'
     ],
+    extras_require={
+        "mysql": ["mysql-connector-python"],
+        "postgres": ["psycopg2"],
+        "oracle": ["cx_Oracle"],
+        "sqlserver": ["pyodbc"],
+        "sqlite": []
+    },
     python_requires=">=3.8",
     classifiers=[
         "Programming Language :: Python :: 3",
