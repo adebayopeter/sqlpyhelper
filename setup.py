@@ -22,6 +22,10 @@ setup(
     python_requires=">=3.8",
     classifiers=[
         "Programming Language :: Python :: 3",
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "Topic :: Database :: Database Engines/Servers",
+        "Operating System :: OS Independent"
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent"
     ],

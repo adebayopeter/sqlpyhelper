@@ -27,9 +27,12 @@ A Python library for simplified database interactions across **SQLite, PostgreSQ
 
 ---
 ## 📦 Installation
+#### Install via PyPI:
 ```sh
 pip install sqlpyhelper
 ```
+📌 Package on PyPI: [SQLPyHelper on PyPI](https://pypi.org/project/SQLPyHelper/)
+
 Or, if working from source:
 ```sh
 git clone https://github.com/adebayopeter/sqlpyhelper.git
