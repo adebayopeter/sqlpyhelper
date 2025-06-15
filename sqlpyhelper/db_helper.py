@@ -187,11 +187,11 @@ class SQLPyHelper:
 
     def get_connection_from_pool(self):
         """Fetches a connection from the pool."""
-        return self.pool.getconn()
+        return self.pool.get_connection()
 
-    def return_connection_to_pool(self, conn):
+    def return_connection_to_pool(self):
         """Returns a connection back to the pool."""
-        self.pool.putconn(conn)
+        self.connection.close()
 
     def reconnect(self):
         """Reconnects to the database if connection is lost"""
@@ -203,7 +203,7 @@ class SQLPyHelper:
             print(f"Error during reconnection: {e}")
 
     def begin_transaction(self):
-        self.execute_query("BEGIN")
+        self.execute_query("START TRANSACTION")
 
     def rollback_transaction(self):
         self.execute_query("ROLLBACK")

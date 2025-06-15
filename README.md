@@ -1,6 +1,6 @@
-# 📌 SQLPyHelper
+# 📌 SQLPyHelper v.0.1.3 🚀
 
-A Python library for simplified database interactions across **SQLite, PostgreSQL, MySQL, SQL Server, and Oracle**. This open-source package provides an intuitive API for handling database operations efficiently.
+A Python library for simplified database interactions across **SQLite, PostgreSQL, MySQL, SQL Server, and Oracle**. SQLPyHelper provides an intuitive API for handling queries, connection pooling, transactions, logging, and backups efficiently.
 
 ## 📖 Table of Contents
 - [🚀 Features](#-features)
@@ -13,17 +13,20 @@ A Python library for simplified database interactions across **SQLite, PostgreSQ
   - [SQL Server Example](#sql-server-example)
   - [Oracle Example](#oracle-example)
 - [📂 Project Structure](#-project-structure)
+- [📌 Available Methods in SQLPyHelper](#-available-methods-in-sqlpyhelper)
 - [🌍 Contributing](#-contributing)
 - [☕ Support the Project](#-support-the-project)
 
 ---
 
-## 🚀 Features
-- **Unified Interface** for multiple databases  
-- **Connection pooling support** for PostgreSQL  
-- **Bulk insertion & dynamic table creation**  
-- **Automated logging & query execution**  
-- **CSV export & backup functionality**  
+## 🚀 Features in v0.1.3
+✅ Unified connection pooling for multiple databases. 
+✅ Automatic reconnection for lost connections. 
+✅ Transaction support (BEGIN, ROLLBACK, COMMIT). 
+✅ Secure parameterized queries to prevent SQL injection. 
+✅ Bulk insertion & dynamic table creation. 
+✅ Logging & error handling for better debugging. 
+✅ CSV export & database backups.
 
 ---
 ## 📦 Installation
@@ -33,7 +36,7 @@ pip install sqlpyhelper
 ```
 📌 Package on PyPI: [SQLPyHelper on PyPI](https://pypi.org/project/SQLPyHelper/)
 
-Or, if working from source:
+For local development:
 ```sh
 git clone https://github.com/adebayopeter/sqlpyhelper.git
 cd sqlpyhelper
@@ -70,62 +73,46 @@ database = os.getenv("DB_NAME")
 ```
 ---
 ## 🛠 Usage Examples
-### SQLite Example
+### Initialize SQLPyHelper
 ```pycon
 from sqlpyhelper.db_helper import SQLPyHelper
-
-db = SQLPyHelper()
+db = SQLPyHelper()  # Auto-detects database type based on `DB_TYPE`
+```
+### SQLite Example
+```pycon
 db.execute_query("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)")
 db.execute_query("INSERT INTO users (name) VALUES (?)", ("Alice",))
-db.execute_query("SELECT * FROM users")
-print(db.fetch_all())
+print(db.fetch_all()) # Expected Output: [(1, 'Alice')]
 db.close()
 ```
 ### PostgreSQL Example
 ```pycon
-db = SQLPyHelper()
-db.execute_query("CREATE TABLE IF NOT EXISTS employees (id SERIAL PRIMARY KEY, name VARCHAR(100))")
-db.execute_query("INSERT INTO employees (name) VALUES (%s)", ("Charlie",))
-db.execute_query("SELECT * FROM employees")
-print(db.fetch_all())
-db.close()
+db.execute_query("CREATE TABLE customers (id SERIAL PRIMARY KEY, name TEXT)")
+db.execute_query("INSERT INTO customers (name) VALUES (%s)", ("Bob",))
+db.begin_transaction()
+db.execute_query("DELETE FROM customers WHERE name=%s", ("Bob",))
+db.rollback_transaction()  # Undo delete
 ```
 ### MySQL Example
-```pycon
-db = SQLPyHelper()
-db.execute_query("CREATE TABLE IF NOT EXISTS customers (id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(100))")
-db.execute_query("INSERT INTO customers (name) VALUES (%s)", ("David",))
-db.execute_query("SELECT * FROM customers")
-print(db.fetch_all())
+```pycon 
+db.execute_query("CREATE TABLE users (id INT PRIMARY KEY, name VARCHAR(100))")
+db.execute_query("INSERT INTO users (id, name) VALUES (%s, %s)", (1, "Alice"))
+print(db.fetch_by_param("users", "id", 1))  # Expected Output: [(1, 'Alice')]
 db.close()
 ```
-```pycon
-db = SQLPyHelper()
-
-# Fetch rows where customer_id = 3
-customers = db.fetch_by_param("customers", "id", 3)
-print(customers)
-
-db.close()
-```
-
 ### SQL Server Example
 ```pycon
-db = SQLPyHelper()
-db.execute_query("CREATE TABLE IF NOT EXISTS orders (id INT PRIMARY KEY, product VARCHAR(100))")
-db.execute_query("INSERT INTO orders (id, product) VALUES (?, ?)", (1, "Laptop"))
-db.execute_query("SELECT * FROM orders")
-print(db.fetch_all())
-db.close()
+db.execute_query("CREATE TABLE orders (order_id INT PRIMARY KEY, item NVARCHAR(100))")
+db.insert_bulk("orders", [{"order_id": 1, "item": "Laptop"}, {"order_id": 2, "item": "Mouse"}])
+db.backup_table("orders", "orders_backup.csv")  # Export data to CSV
 ```
 ### Oracle Example
 ```pycon
-db = SQLPyHelper()
 db.execute_query("CREATE TABLE employees (id NUMBER PRIMARY KEY, name VARCHAR2(100))")
-db.execute_query("INSERT INTO employees (id, name) VALUES (:1, :2)", (1, "Emily"))
-db.execute_query("SELECT * FROM employees")
-print(db.fetch_all())
-db.close()
+db.execute_query("INSERT INTO employees (id, name) VALUES (:1, :2)", (1, "Charlie"))
+db.setup_connection_pool(min_conn=2, max_conn=10)  # Enable pooling for better performance
+conn = db.get_connection_from_pool()
+db.return_connection_to_pool(conn)
 ```
 
 ## 📂 Project Structure
@@ -142,7 +129,25 @@ db.close()
 ├─ README.md
 └─ requirements.txt
 ```
-
+---
+## 📌 Available Methods in SQLPyHelper
+```
+| Method | Description |
+|--------|-------------|
+| `execute_query(query, params=None)` | Executes a SQL query with optional parameters. |
+| `fetch_one()` | Retrieves a **single row** from query results. |
+| `fetch_all()` | Retrieves **all rows** from query results. |
+| `fetch_by_param(table, column, value)` | Fetches **rows dynamically** based on a given parameter. |
+| `create_table(table_name, columns_dict)` | Creates a table dynamically with a dictionary format. |
+| `insert_bulk(table, data_list)` | Inserts **multiple rows at once** efficiently. |
+| `backup_table(table, backup_file.csv)` | Exports table data to **CSV format**. |
+| `setup_connection_pool()` | Initializes **database connection pooling**. |
+| `get_connection_from_pool()` | Fetches a connection from the pool. |
+| `return_connection_to_pool(conn)` | Returns connection back to pool. |
+| `begin_transaction()` | Begins an **explicit transaction**. |
+| `rollback_transaction()` | Rolls back **uncommitted transactions**. |
+| `close()` | Closes the database connection safely. |
+```
 ---
 ## 🌍 Contributing
 We welcome contributions from the **open-source community**! Follow these steps to contribute:

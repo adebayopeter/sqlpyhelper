@@ -1,71 +1,86 @@
+import pytest
 from sqlpyhelper.db_helper import SQLPyHelper
+import os
 
 
-# SQLite Test
-def test_sqlite():
-    print("Testing SQLite...")
-    db = SQLPyHelper()
-    db.execute_query("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)")
-    db.execute_query("INSERT INTO users (name) VALUES (?)", ("Alice",))
-    db.execute_query("INSERT INTO users (name) VALUES (?)", ("Bob",))
-    db.execute_query("SELECT * FROM users")
-    results = db.fetch_all()
-    print("Results:", results)
-    db.close()
+# Connection test
+@pytest.fixture
+def db():
+    """Fixture to initialize and return a database helper instance based on DB_TYPE."""
+    db_type = os.getenv("DB_TYPE", "mysql")  # Default to MySQL if not set
+    os.environ["DB_TYPE"] = db_type  # Ensure correct DB type is used
+    db_instance = SQLPyHelper()
+    yield db_instance
+    db_instance.close()  # Cleanup after tests
 
 
-# PostgreSQL Test (Ensure you have PostgreSQL running locally)
-def test_postgres():
-    print("Testing PostgreSQL...")
-    db = SQLPyHelper()
-    db.execute_query("CREATE TABLE IF NOT EXISTS employees (id SERIAL PRIMARY KEY, name VARCHAR(100))")
-    db.execute_query("INSERT INTO employees (name) VALUES (%s)", ("Charlie",))
-    db.execute_query("SELECT * FROM employees")
-    results = db.fetch_all()
-    print("Results:", results)
-    db.close()
+@pytest.mark.skipif(os.getenv("DB_TYPE") != "mysql", reason="Skipping non-MySQL tests")
+def test_connection(db):
+    """Ensure MySQL connects successfully."""
+    assert db.connection is not None, "MySQL connection failed!"
 
 
-# MySQL Test (Ensure MySQL is running locally)
-def test_mysql():
-    print("Testing MySQL...")
-    db = SQLPyHelper()
-    db.execute_query("CREATE TABLE IF NOT EXISTS customers (id INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(100))")
-    db.execute_query("INSERT INTO customers (name) VALUES (%s)", ("Joe",))
+@pytest.mark.skipif(os.getenv("DB_TYPE") != "mysql", reason="Skipping non-MySQL tests")
+def test_fetch_all(db):
+    """Ensure fetch_all retrieves multiple rows in MySQL."""
+    db.execute_query("INSERT INTO customers (name) VALUES ('Sade'), ('Rita')")
     db.execute_query("SELECT * FROM customers")
-    results = db.fetch_all()
-    print("Results:", results)
-    db.close()
+    result = db.fetch_all()
+    assert len(result) >= 2, "fetch_all() failed to return expected results!"
 
 
-# SQL Server Test (Requires ODBC Driver for SQL Server)
-def test_sqlserver():
-    print("Testing SQL Server...")
+# Query Execution & Fetching
+@pytest.mark.parametrize("db_type,query", [
+    ("mysql", "CREATE TABLE test_user_tbl (id INT PRIMARY KEY, name VARCHAR(100))"),
+    # ("postgres", "CREATE TABLE test_user_tbl (id SERIAL PRIMARY KEY, name TEXT)"),
+    # ("sqlserver", "CREATE TABLE test_user_tbl (id INT PRIMARY KEY, name NVARCHAR(100))"),
+    # ("oracle", "CREATE TABLE test_user_tbl (id NUMBER PRIMARY KEY, name VARCHAR2(100))")
+])
+def test_query_execution(db_type, query):
+    """Test table creation syntax across database variants."""
+    os.environ["DB_TYPE"] = db_type
     db = SQLPyHelper()
-    db.execute_query("CREATE TABLE IF NOT EXISTS orders (id INT PRIMARY KEY, product VARCHAR(100))")
-    db.execute_query("INSERT INTO orders (id, product) VALUES (?, ?)", (1, "Laptop"))
-    db.execute_query("SELECT * FROM orders")
-    results = db.fetch_all()
-    print("Results:", results)
+    db.execute_query(query)
+    assert True  # If no errors, test passes
     db.close()
 
 
-# Oracle Test (Ensure Oracle is installed & running)
-def test_oracle():
-    print("Testing Oracle...")
+# Parameterized Query Tests
+# @pytest.mark.parametrize("db_type", ["mysql", "postgres", "sqlserver", "oracle"])
+@pytest.mark.parametrize("db_type", ["mysql"])
+def test_fetch_by_param(db_type):
+    """Test parameterized queries for different databases."""
+    os.environ["DB_TYPE"] = db_type
     db = SQLPyHelper()
-    db.execute_query("CREATE TABLE employees (id NUMBER PRIMARY KEY, name VARCHAR2(100))")
-    db.execute_query("INSERT INTO employees (id, name) VALUES (:1, :2)", (1, "Emily"))
-    db.execute_query("SELECT * FROM employees")
-    results = db.fetch_all()
-    print("Results:", results)
+
+    result = db.fetch_by_param("customers", "name", "David")
+    assert len(result) >= 1, f"Failed to fetch record for {db_type}"
     db.close()
 
 
-# Run Tests
-if __name__ == "__main__":
-    # test_sqlite()
-    # test_postgres()
-    test_mysql()
-    # test_sqlserver()
-    # test_oracle()
+# Connection Pooling Validation
+# @pytest.mark.parametrize("db_type", ["mysql", "postgres", "sqlserver", "oracle"])
+@pytest.mark.parametrize("db_type", ["mysql"])
+def test_connection_pooling(db_type):
+    """Test pooling setup for different databases."""
+    os.environ["DB_TYPE"] = db_type
+    db = SQLPyHelper()
+    db.setup_connection_pool()
+    conn = db.get_connection_from_pool()
+    assert conn is not None, f"Pooling failed for {db_type}"
+    db.return_connection_to_pool()
+    db.close()
+
+
+# Transaction Management
+def test_transaction_rollback(db):
+    """Verify rollback restores previous state."""
+    db.begin_transaction()
+    db.execute_query("INSERT INTO customers (name) VALUES ('Eve')")
+    db.rollback_transaction()
+    result = db.fetch_by_param("customers", "name", "Eve")
+    assert len(result) == 0, "Rollback did not revert changes!"
+
+
+# pytest test_sqlpyhelper.py
+

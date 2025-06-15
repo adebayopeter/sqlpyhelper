@@ -27,3 +27,6 @@ build/
 
 # Ignore macOS system files
 .DS_Store
+
+# files to ignore
+test/my_test.py
