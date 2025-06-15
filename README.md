@@ -20,13 +20,13 @@ A Python library for simplified database interactions across **SQLite, PostgreSQ
 ---
 
 ## 🚀 Features in v0.1.3
-✅ Unified connection pooling for multiple databases. 
-✅ Automatic reconnection for lost connections. 
-✅ Transaction support (BEGIN, ROLLBACK, COMMIT). 
-✅ Secure parameterized queries to prevent SQL injection. 
-✅ Bulk insertion & dynamic table creation. 
-✅ Logging & error handling for better debugging. 
-✅ CSV export & database backups.
+- Unified connection pooling for multiple databases. 
+- Automatic reconnection for lost connections. 
+- Transaction support (BEGIN, ROLLBACK, COMMIT). 
+- Secure parameterized queries to prevent SQL injection. 
+- Bulk insertion & dynamic table creation. 
+- Logging & error handling for better debugging. 
+- CSV export & database backups.
 
 ---
 ## 📦 Installation
