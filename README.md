@@ -131,7 +131,7 @@ db.return_connection_to_pool(conn)
 ```
 ---
 ## 📌 Available Methods in SQLPyHelper
-```
+```md
 | Method | Description |
 |--------|-------------|
 | `execute_query(query, params=None)` | Executes a SQL query with optional parameters. |
