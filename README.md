@@ -148,6 +148,10 @@ db.return_connection_to_pool(conn)
 | `rollback_transaction()` | Rolls back **uncommitted transactions**. |
 | `close()` | Closes the database connection safely. |
 ```
+| Command | Description |
+| --- | --- |
+| `git status` | List all *new or modified* files |
+| `git diff` | Show file differences that **haven't been** staged |
 ---
 ## 🌍 Contributing
 We welcome contributions from the **open-source community**! Follow these steps to contribute:
