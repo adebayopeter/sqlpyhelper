@@ -131,7 +131,7 @@ db.return_connection_to_pool(conn)
 ```
 ---
 ## 📌 Available Methods in SQLPyHelper
-```md
+
 | Method | Description |
 |--------|-------------|
 | `execute_query(query, params=None)` | Executes a SQL query with optional parameters. |
@@ -147,11 +147,7 @@ db.return_connection_to_pool(conn)
 | `begin_transaction()` | Begins an **explicit transaction**. |
 | `rollback_transaction()` | Rolls back **uncommitted transactions**. |
 | `close()` | Closes the database connection safely. |
-```
-| Command | Description |
-| --- | --- |
-| `git status` | List all *new or modified* files |
-| `git diff` | Show file differences that **haven't been** staged |
+
 ---
 ## 🌍 Contributing
 We welcome contributions from the **open-source community**! Follow these steps to contribute:
