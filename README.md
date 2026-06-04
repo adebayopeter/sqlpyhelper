@@ -6,9 +6,17 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/adebayopeter/sqlpyhelper/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/adebayopeter/sqlpyhelper?style=social)](https://github.com/adebayopeter/sqlpyhelper)
 
-# 📌 SQLPyHelper v.0.1.4 🚀
+SQLPyHelper is a lightweight Python library that gives you a single, consistent API across **SQLite, PostgreSQL, MySQL, SQL Server, and Oracle** — without the overhead of an ORM.
 
-A Python library for simplified database interactions across **SQLite, PostgreSQL, MySQL, SQL Server, and Oracle**. SQLPyHelper provides an intuitive API for handling queries, connection pooling, transactions, logging, and backups efficiently.
+If you need to run queries, manage transactions, pool connections, or back up tables across multiple database types without learning SQLAlchemy's abstraction layer or wiring up five different drivers manually, SQLPyHelper handles that boilerplate for you.
+
+```sh
+# Works identically across all five supported databases
+with SQLPyHelper(db_type="postgres", host="localhost", user="user", 
+                 password="pass", database="mydb") as db:
+    db.execute_query("INSERT INTO orders (item) VALUES (%s)", ("Laptop",))
+    results = db.fetch_all()
+```
 
 ## 📖 Table of Contents
 - [🚀 Features](#-features)
@@ -27,7 +35,7 @@ A Python library for simplified database interactions across **SQLite, PostgreSQ
 
 ---
 
-## 🚀 Features in v0.1.3
+## 🚀 Features in v0.1.4
 - Unified connection pooling for multiple databases. 
 - Automatic reconnection for lost connections. 
 - Transaction support (BEGIN, ROLLBACK, COMMIT). 
@@ -38,10 +46,21 @@ A Python library for simplified database interactions across **SQLite, PostgreSQ
 
 ---
 ## 📦 Installation
-#### Install via PyPI:
+
+Install the base package (includes SQLite support out of the box):
 ```sh
 pip install sqlpyhelper
 ```
+
+Install with your database driver:
+```sh
+pip install sqlpyhelper[postgres]    # PostgreSQL
+pip install sqlpyhelper[mysql]       # MySQL
+pip install sqlpyhelper[sqlserver]   # SQL Server
+pip install sqlpyhelper[oracle]      # Oracle
+pip install sqlpyhelper[all]         # All databases
+```
+
 📌 Package on PyPI: [SQLPyHelper on PyPI](https://pypi.org/project/SQLPyHelper/)
 
 For local development:
@@ -155,6 +174,7 @@ db.return_connection_to_pool(conn)
 | `begin_transaction()` | Begins an **explicit transaction**. |
 | `rollback_transaction()` | Rolls back **uncommitted transactions**. |
 | `close()` | Closes the database connection safely. |
+| `__enter__` / `__exit__()` | Use as a context manager — connection closes automatically. |
 
 ---
 ## 🌍 Contributing
