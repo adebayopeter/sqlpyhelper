@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] - 2026-06-04
+
+### Security
+- Fixed SQL injection vulnerability in `fetch_by_param`, `create_table`,
+  `insert_bulk`, `backup_table`, and `insert_dynamic` — table and column
+  names are now validated against a strict identifier allowlist
+- Fixed command injection in `backup_database` — replaced `shell=True`
+  subprocess call with list-form arguments
+
+### Fixed
+- `reconnect()` no longer crashes — original connection parameters are
+  stored and replayed via `_init_kwargs`
+- `return_connection_to_pool()` now correctly returns connections to the
+  pool instead of closing them
+- SQLite queries now use `?` placeholder instead of `%s` throughout
+- Errors now raise typed exceptions (`QueryError`, `ConnectionError`,
+  `BackupError`) instead of being silently printed and returning `None`
+
+### Changed
+- Development status updated to Beta (was incorrectly marked Production/Stable)
+
 ## [0.1.3] - 2025-06-16  
 ### **🚀 Major Enhancements & Stability Improvements**  
 🔹 **Connection Pooling**  

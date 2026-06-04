@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name='SQLPyHelper',
-    version='0.1.3',
+    version='0.1.4',
     description='A simple SQL database helper package for Python.',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -17,7 +17,8 @@ setup(
         'mysql-connector-python',
         'pyodbc',
         'cx_Oracle',
-        'python-dotenv'
+        'python-dotenv',
+        'click'
     ],
     extras_require={
         "mysql": ["mysql-connector-python"],
@@ -29,10 +30,15 @@ setup(
     python_requires=">=3.8",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Topic :: Database :: Database Engines/Servers",
         "Operating System :: OS Independent",
         "License :: OSI Approved :: MIT License"
     ],
+    entry_points={
+        'console_scripts': [
+            'sqlpyhelper=sqlpyhelper.cli:cli',
+        ]
+    },
 )

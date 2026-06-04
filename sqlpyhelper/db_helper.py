@@ -1,26 +1,69 @@
 import csv
 from dotenv import load_dotenv
 import os
+import re
 
 load_dotenv()  # Load environment variables from .env file
 
 
-def log_query(query):
-    """Logs queries for debugging purposes."""
-    with open("query_log.txt", "a") as f:
-        f.write(query + "\n")
+def _validate_identifier(name: str) -> str:
+    """
+    Validate a SQL identifier (table or column name).
+    Allows only alphanumeric characters and underscores.
+    Raises ValueError for anything else, preventing SQL injection via identifiers.
+    """
+    if not re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', name):
+        raise ValueError(
+            f"Invalid SQL identifier: {name!r}. "
+            "Only letters, digits, and underscores are allowed."
+        )
+    return name
+
+
+class SQLPyHelperError(Exception):
+    """Base exception for SQLPyHelper errors."""
+
+
+class ConnectionError(SQLPyHelperError):
+    """Raised when a database connection fails."""
+
+
+class QueryError(SQLPyHelperError):
+    """Raised when a query fails to execute."""
+
+
+class BackupError(SQLPyHelperError):
+    """Raised when a backup operation fails."""
 
 
 class SQLPyHelper:
-    def __init__(self):
-        self.db_type = os.getenv("DB_TYPE").lower()
-        self.host = os.getenv("DB_HOST")
-        self.user = os.getenv("DB_USER")
-        self.password = os.getenv("DB_PASSWORD")
-        self.database = os.getenv("DB_NAME")
-        self.driver = os.getenv("DB_DRIVER")
-        self.oracle_sid = os.getenv("ORACLE_SID")
+    def __init__(self, db_type=None, host=None, user=None, password=None,
+                 database=None, driver=None, port=None, oracle_sid=None):
+
+        # Store original params so reconnect() can replay them
+        self._init_kwargs = {
+            "db_type": db_type,
+            "host": host,
+            "user": user,
+            "password": password,
+            "database": database,
+            "driver": driver,
+            "port": port,
+            "oracle_sid": oracle_sid,
+        }
+
+        self.db_type = db_type or os.getenv("DB_TYPE").lower()
+        self.host = host or os.getenv("DB_HOST")
+        self.user = user or os.getenv("DB_USER")
+        self.password = password or os.getenv("DB_PASSWORD")
+        self.database = database or os.getenv("DB_NAME")
+        self.driver = driver or os.getenv("DB_DRIVER")
+        self.port = port or os.getenv("DB_PORT")
+        self.oracle_sid = oracle_sid or os.getenv("ORACLE_SID")
         self.pool = None
+
+        if not self.db_type or not self.database:
+            raise ValueError("Missing required database configuration.")
 
         if self.db_type == "sqlite":
             import sqlite3
@@ -61,32 +104,32 @@ class SQLPyHelper:
                 self.cursor.execute(query, params)
                 self.connection.commit()
             else:
-                print(f"Error executing query: {e}")
+                raise QueryError(f"Query failed: {e}") from e
 
     def fetch_one(self):
         """Fetches a single row"""
         try:
             return self.cursor.fetchone()
         except Exception as e:
-            print(f"Error fetching row: {e}")
-            return None
+            raise QueryError(f"Failed to fetch row: {e}") from e
 
     def fetch_all(self):
         """Fetches all rows from the last executed query"""
         try:
             return self.cursor.fetchall()
         except Exception as e:
-            print(f"Error fetching rows: {e}")
-            return None
+            raise QueryError(f"Failed to fetch rows: {e}") from e
 
     def fetch_by_param(self, table_name, column_name, value):
         try:
-            query = f"SELECT * FROM {table_name} WHERE {column_name} = %s"
+            table_name = _validate_identifier(table_name)
+            column_name = _validate_identifier(column_name)
+            placeholder = "?" if self.db_type == "sqlite" else "%s"
+            query = f"SELECT * FROM {table_name} WHERE {column_name} = {placeholder}"
             self.cursor.execute(query, (value,))
             return self.cursor.fetchall()
         except Exception as e:
-            print(f"Error fetching row(s): {e}")
-            return None
+            raise QueryError(f"Failed to fetch by param: {e}") from e
 
     def close(self):
         """Closes the connection"""
@@ -94,8 +137,7 @@ class SQLPyHelper:
             self.cursor.close()
             self.connection.close()
         except Exception as e:
-            print(f"Error closing connection: {e}")
-            return None
+            raise ConnectionError(f"Failed to close connection: {e}") from e
 
     def create_table(self, table_name, columns):
         """
@@ -104,12 +146,13 @@ class SQLPyHelper:
         columns = {'id': 'INTEGER PRIMARY KEY', 'name': 'TEXT', 'age': 'INTEGER'}
         """
         try:
-            column_defs = ", ".join(f"{col} {dtype}" for col, dtype in columns.items())
-            query = f"CREATE TABLE {table_name} ({column_defs})"
+            table_name = _validate_identifier(table_name)
+            validated_cols = {_validate_identifier(col): dtype for col, dtype in columns.items()}
+            columns_def = ", ".join([f"{col} {dtype}" for col, dtype in validated_cols.items()])
+            query = f"CREATE TABLE IF NOT EXISTS {table_name} ({columns_def})"
             self.execute_query(query)
         except Exception as e:
-            print(f"Error creating table: {e}")
-            return None
+            raise QueryError(f"Failed to create table: {e}") from e
 
     def insert_bulk(self, table_name, data):
         """
@@ -118,16 +161,18 @@ class SQLPyHelper:
         data = [{'id': 1, 'name': 'Alice'}, {'id': 2, 'name': 'Bob'}]
         """
         try:
-            columns = ", ".join(data[0].keys())  # Extract column names
-            placeholders = ", ".join(["%s" for _ in data[0].keys()])  # Generate placeholders
+            table_name = _validate_identifier(table_name)
+            col_names = [_validate_identifier(col) for col in data[0].keys()]
+            columns = ", ".join(col_names)
+            placeholder = "?" if self.db_type == "sqlite" else "%s"
+            placeholders = ", ".join([placeholder] * len(data[0]))
             query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
             values = [tuple(row.values()) for row in data]
             self.cursor.executemany(query, values)
             self.connection.commit()
 
         except Exception as e:
-            print(f"Error inserting bulk rows: {e}")
-            return None
+            raise QueryError(f"Failed to insert bulk rows: {e}") from e
 
     def backup_table(self, table_name, backup_file):
         """
@@ -136,6 +181,7 @@ class SQLPyHelper:
         backup_table('users', 'users_backup.csv')
         """
         try:
+            table_name = _validate_identifier(table_name)
             query = f"SELECT * FROM {table_name}"
             self.execute_query(query)
             rows = self.fetch_all()
@@ -145,8 +191,7 @@ class SQLPyHelper:
                 writer.writerow([desc[0] for desc in self.cursor.description])  # Column headers
                 writer.writerows(rows)
         except Exception as e:
-            print(f"Error backing up table: {e}")
-            return None
+            raise BackupError(f"Failed to backup table: {e}") from e
 
     def setup_connection_pool(self, min_conn=1, max_conn=5, pool_size=5):
         """Sets up connection pooling based on the database type"""
@@ -182,28 +227,51 @@ class SQLPyHelper:
             else:
                 raise ValueError(f"Connection pooling not supported for {self.db_type}")
         except Exception as e:
-            print(f"⚠️ Error setting up connection pool: {e}")
-            self.pool = None  # Prevent broken pool usage
+            raise ConnectionError(f"Failed to set up connection pool: {e}") from e
 
     def get_connection_from_pool(self):
         """Fetches a connection from the pool."""
         return self.pool.get_connection()
 
-    def return_connection_to_pool(self):
+    def return_connection_to_pool(self, connection=None) -> None:
         """Returns a connection back to the pool."""
-        self.connection.close()
+        conn = connection or self.connection
+        if self.pool is None:
+            raise RuntimeError("No connection pool initialised. Call setup_connection_pool() first.")
+
+        if self.db_type == "postgres":
+            self.pool.putconn(conn)
+        elif self.db_type == "mysql":
+            conn.close()
+        elif self.db_type == "oracle":
+            self.pool.release(conn)
+        else:
+            conn.close()
 
     def reconnect(self):
         """Reconnects to the database if connection is lost"""
         try:
-            self.connection.close()  # Close existing connection
-            self.__init__()  # Reinitialize the connection
+            self.connection.close()
+            self.__init__(**self._init_kwargs)
             print("Database reconnected successfully.")
         except Exception as e:
-            print(f"Error during reconnection: {e}")
+            raise ConnectionError(f"Reconnection failed: {e}") from e
 
     def begin_transaction(self):
         self.execute_query("START TRANSACTION")
 
     def rollback_transaction(self):
         self.execute_query("ROLLBACK")
+
+    def insert_dynamic(self, table, data: dict):
+        """
+        Dynamically constructs and executes an INSERT query with database-specific placeholders.
+        """
+        table = _validate_identifier(table)
+        columns = ", ".join(_validate_identifier(col) for col in data.keys())
+        placeholders_style = "?" if self.db_type == "sqlite" else "%s"
+        placeholders = ", ".join([placeholders_style] * len(data))
+        values = tuple(data.values())
+
+        sql = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
+        self.execute_query(sql, values)
