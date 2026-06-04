@@ -90,6 +90,13 @@ class SQLPyHelper:
 
         self.cursor = self.connection.cursor()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
+
     def execute_query(self, query, params=None):
         """Executes a query with optional parameters"""
         try:

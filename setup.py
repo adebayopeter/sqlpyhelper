@@ -11,34 +11,53 @@ setup(
     long_description_content_type="text/markdown",
     author='Adebayo Olaonipekun',
     author_email='pekunmi@live.com',
+    url='https://github.com/adebayopeter/sqlpyhelper',
     packages=find_packages(),
+    package_data={
+        "sqlpyhelper": ["py.typed"],
+    },
+    python_requires=">=3.8",
     install_requires=[
-        'psycopg2',
-        'mysql-connector-python',
-        'pyodbc',
-        'cx_Oracle',
         'python-dotenv',
         'click'
     ],
     extras_require={
-        "mysql": ["mysql-connector-python"],
         "postgres": ["psycopg2"],
-        "oracle": ["cx_Oracle"],
+        "mysql": ["mysql-connector-python"],
         "sqlserver": ["pyodbc"],
-        "sqlite": []
+        "oracle": ["cx_Oracle"],
+        "all": [
+            "psycopg2",
+            "mysql-connector-python",
+            "pyodbc",
+            "cx_Oracle",
+        ],
     },
-    python_requires=">=3.8",
+    keywords=[
+        "database", "sql", "sqlite", "postgresql", "mysql",
+        "sqlserver", "oracle", "db", "query", "helper",
+    ],
+    project_urls={
+        "Source": "https://github.com/adebayopeter/sqlpyhelper",
+        "Bug Tracker": "https://github.com/adebayopeter/sqlpyhelper/issues",
+        "Changelog": "https://github.com/adebayopeter/sqlpyhelper/blob/main/CHANGELOG.md",
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Topic :: Database :: Database Engines/Servers",
         "Operating System :: OS Independent",
-        "License :: OSI Approved :: MIT License"
+        "License :: OSI Approved :: MIT License",
     ],
     entry_points={
         'console_scripts': [
             'sqlpyhelper=sqlpyhelper.cli:cli',
-        ]
+        ],
     },
 )

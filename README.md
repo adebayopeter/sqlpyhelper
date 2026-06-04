@@ -1,4 +1,12 @@
-# 📌 SQLPyHelper v.0.1.3 🚀
+# SQLPyHelper
+
+[![PyPI version](https://img.shields.io/pypi/v/sqlpyhelper.svg)](https://pypi.org/project/sqlpyhelper/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/sqlpyhelper.svg)](https://pypi.org/project/sqlpyhelper/)
+[![Python versions](https://img.shields.io/pypi/pyversions/sqlpyhelper.svg)](https://pypi.org/project/sqlpyhelper/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/adebayopeter/sqlpyhelper/blob/main/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/adebayopeter/sqlpyhelper?style=social)](https://github.com/adebayopeter/sqlpyhelper)
+
+# 📌 SQLPyHelper v.0.1.4 🚀
 
 A Python library for simplified database interactions across **SQLite, PostgreSQL, MySQL, SQL Server, and Oracle**. SQLPyHelper provides an intuitive API for handling queries, connection pooling, transactions, logging, and backups efficiently.
 
