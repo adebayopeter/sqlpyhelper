@@ -96,6 +96,7 @@ class SQLPyHelper:
                 user=self.user,
                 password=self.password,
                 dbname=self.database,
+                port=self.port,
             )
         elif self.db_type == "mysql":
             import mysql.connector

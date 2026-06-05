@@ -105,7 +105,6 @@ class AsyncSQLPyHelper:
                 import aiosqlite
 
                 self._connection = await aiosqlite.connect(self.database or "")  # type: ignore[arg-type]
-                self._connection.row_factory = aiosqlite.Row
                 logger.info("Connected to SQLite database: %s", self.database)
 
             elif self.db_type == "postgres":
