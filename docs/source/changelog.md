@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.7] - 2026-06-05
+
+### Added
+- Cross-database migration via migrate_table() in sqlpyhelper.migration
+- Supports all five database combinations with batched inserts
+- Best-effort type mapping across SQLite, PostgreSQL, MySQL, SQL Server, Oracle
+- MigrationError exception for migration-specific failures
+- Migration documentation page on ReadTheDocs
+- 37 new tests for migration module (96 total)
+
 ## [0.1.6] - 2026-06-05
 
 ### Added

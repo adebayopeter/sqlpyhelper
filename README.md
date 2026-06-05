@@ -1,11 +1,11 @@
 # SQLPyHelper
 
 [![PyPI version](https://img.shields.io/pypi/v/sqlpyhelper.svg)](https://pypi.org/project/sqlpyhelper/)
+[![Documentation](https://readthedocs.org/projects/sqlpyhelper/badge/?version=latest)](https://sqlpyhelper.readthedocs.io/en/latest/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/sqlpyhelper.svg)](https://pypi.org/project/sqlpyhelper/)
 [![Python versions](https://img.shields.io/pypi/pyversions/sqlpyhelper.svg)](https://pypi.org/project/sqlpyhelper/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/adebayopeter/sqlpyhelper/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/adebayopeter/sqlpyhelper?style=social)](https://github.com/adebayopeter/sqlpyhelper)
-[![Documentation](https://readthedocs.org/projects/sqlpyhelper/badge/?version=latest)](https://sqlpyhelper.readthedocs.io/en/latest/)
 
 SQLPyHelper is a lightweight Python library that gives you a single, consistent API across **SQLite, PostgreSQL, MySQL, SQL Server, and Oracle** — without the overhead of an ORM.
 
