@@ -29,6 +29,7 @@ with SQLPyHelper(db_type="postgres", host="localhost", user="user",
   - [MySQL Example](#mysql-example)
   - [SQL Server Example](#sql-server-example)
   - [Oracle Example](#oracle-example)
+  - [Async Example (FastAPI / asyncio)](#async-example-fastapi--asyncio)
 - [📂 Project Structure](#-project-structure)
 - [📌 Available Methods in SQLPyHelper](#-available-methods-in-sqlpyhelper)
 - [🌍 Contributing](#-contributing)
@@ -36,14 +37,16 @@ with SQLPyHelper(db_type="postgres", host="localhost", user="user",
 
 ---
 
-## 🚀 Features in v0.1.4
-- Unified connection pooling for multiple databases. 
-- Automatic reconnection for lost connections. 
-- Transaction support (BEGIN, ROLLBACK, COMMIT). 
-- Secure parameterized queries to prevent SQL injection. 
-- Bulk insertion & dynamic table creation. 
-- Logging & error handling for better debugging. 
+## 🚀 Features in v0.1.8
+- Unified connection pooling for multiple databases.
+- Automatic reconnection for lost connections.
+- Transaction support (BEGIN, ROLLBACK, COMMIT).
+- Secure parameterized queries to prevent SQL injection.
+- Bulk insertion & dynamic table creation.
+- Logging & error handling for better debugging.
 - CSV export & database backups.
+- **Cross-database migration** — copy tables between any two supported databases.
+- **Async support** — `AsyncSQLPyHelper` for FastAPI and asyncio applications.
 
 ---
 ## 📦 Installation
@@ -142,20 +145,50 @@ db.setup_connection_pool(min_conn=2, max_conn=10)  # Enable pooling for better p
 conn = db.get_connection_from_pool()
 db.return_connection_to_pool(conn)
 ```
+### Async Example (FastAPI / asyncio)
+```python
+import asyncio
+from sqlpyhelper.async_helper import AsyncSQLPyHelper
+
+async def main():
+    async with AsyncSQLPyHelper(db_type="sqlite", database="my.db") as db:
+        await db.execute(
+            "CREATE TABLE IF NOT EXISTS users (id INTEGER, name TEXT)"
+        )
+        await db.execute(
+            "INSERT INTO users VALUES ($1, $2)", 1, "Alice"
+        )
+        rows = await db.fetch_all("SELECT * FROM users")
+        print(rows)
+
+asyncio.run(main())
+```
 
 ## 📂 Project Structure
 ```
 📦 SQLPyHelper/
-├─ sqlpyhelper/
-│  ├─ __init__.py
-│  └─ db_helper.py
-├─ tests/
-│  └─ test_sqlpyhelper.py
-├─ .env_example
-├─ .gitignore
-├─ setup.py
-├─ README.md
-└─ requirements.txt
+├─ sqlpyhelper/
+│  ├─ __init__.py
+│  ├─ db_helper.py
+│  ├─ async_helper.py
+│  ├─ automation_utils.py
+│  ├─ cli.py
+│  └─ migration.py
+├─ test/
+│  ├─ test_sqlpyhelper.py
+│  ├─ test_async_helper.py
+│  └─ test_migration.py
+├─ docs/
+├─ .env_example
+├─ .gitignore
+├─ setup.py
+├─ setup.cfg
+├─ pyproject.toml
+├─ CHANGELOG.md
+├─ CONTRIBUTING.md
+├─ pre-commit.sh
+├─ README.md
+└─ requirements.txt
 ```
 ---
 ## 📌 Available Methods in SQLPyHelper
@@ -177,6 +210,7 @@ db.return_connection_to_pool(conn)
 | `commit_transaction()` | Commits the current transaction. |
 | `close()` | Closes the database connection safely. |
 | `__enter__` / `__exit__()` | Use as a context manager — connection closes automatically. |
+| `AsyncSQLPyHelper` | Async-native class for FastAPI/asyncio — see [Async docs](https://sqlpyhelper.readthedocs.io/en/latest/async.html). |
 
 ---
 ## 🌍 Contributing
