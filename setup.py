@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name='SQLPyHelper',
-    version='0.1.7',
+    version='0.1.8',
     description='A simple SQL database helper package for Python.',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -26,11 +26,14 @@ setup(
         "mysql": ["mysql-connector-python"],
         "sqlserver": ["pyodbc"],
         "oracle": ["oracledb"],
+        "async-postgres": ["asyncpg"],
+        "async-mysql": ["aiomysql"],
+        "async-sqlite": ["aiosqlite"],
+        "async-sqlserver": ["aioodbc"],
+        "async-all": ["asyncpg", "aiomysql", "aiosqlite", "aioodbc"],
         "all": [
-            "psycopg2",
-            "mysql-connector-python",
-            "pyodbc",
-            "oracledb",
+            "psycopg2", "mysql-connector-python", "pyodbc", "oracledb",
+            "asyncpg", "aiomysql", "aiosqlite", "aioodbc",
         ],
     },
     keywords=[

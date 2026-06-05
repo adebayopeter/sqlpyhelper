@@ -22,6 +22,7 @@ across SQLite, PostgreSQL, MySQL, SQL Server, and Oracle — without the overhea
    installation
    quickstart
    configuration
+   async
    migration
    api
    changelog

@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.8] - 2026-06-06
+
+### Added
+- AsyncSQLPyHelper class in sqlpyhelper/async_helper.py
+- Async-native support for SQLite (aiosqlite), PostgreSQL (asyncpg),
+  MySQL (aiomysql), SQL Server (aioodbc), Oracle (python-oracledb async)
+- Unified $1, $2 placeholder syntax translated automatically per driver
+- async context manager support (async with AsyncSQLPyHelper(...) as db)
+- Async connection pooling for PostgreSQL and MySQL
+- Async transaction management (begin, commit, rollback)
+- execute_many() for async bulk inserts
+- fetch_val() for scalar queries
+- AsyncConnectionError and AsyncQueryError exceptions
+- async-postgres, async-mysql, async-sqlite, async-sqlserver extras in setup.py
+- Async documentation page on ReadTheDocs
+- 45 new async tests (141 total, all passing)
+
 ## [0.1.7] - 2026-06-05
 
 ### Added
