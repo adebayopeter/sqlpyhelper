@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2026-06-06
+
+### Added
+- go-live/ test suite for end-to-end verification before each release
+- README.md in go-live/ with run instructions
+
+### Fixed
+- SQLite transaction rollback now works correctly — execute_query no
+  longer auto-commits when inside an explicit transaction
+- PostgreSQL sync connection now correctly uses the port parameter
+
+### Changed
+- Version milestone: 0.2.0 reflects stable async, migration, and
+  full test suite
+
 ## [0.1.8] - 2026-06-06
 
 ### Added

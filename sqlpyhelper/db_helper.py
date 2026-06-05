@@ -80,6 +80,7 @@ class SQLPyHelper:
         self.port: Optional[str] = port or os.getenv("DB_PORT")
         self.oracle_sid: Optional[str] = oracle_sid or os.getenv("ORACLE_SID")
         self.pool: Any = None
+        self._in_transaction: bool = False
 
         if not self.db_type or not self.database:
             raise ValueError("Missing required database configuration.")
@@ -143,14 +144,14 @@ class SQLPyHelper:
                 self.cursor.execute(query, params)
             else:
                 self.cursor.execute(query)
-            self.connection.commit()
+            if not self._in_transaction:
+                self.connection.commit()
         except Exception as e:
-            if "server has gone away" in str(
-                e
-            ):  # Example check for MySQL lost connection
+            if "server has gone away" in str(e):
                 self.reconnect()
                 self.cursor.execute(query, params)  # type: ignore[arg-type]
-                self.connection.commit()
+                if not self._in_transaction:
+                    self.connection.commit()
             else:
                 raise QueryError(f"Query failed: {e}") from e
 
@@ -350,6 +351,7 @@ class SQLPyHelper:
                 self.execute_query("BEGIN TRANSACTION")
             elif self.db_type == "oracle":
                 pass  # Oracle starts transactions implicitly on first DML statement
+            self._in_transaction = True
             logger.info("Transaction started on %s database", self.db_type)
         except Exception as e:
             raise QueryError(f"Failed to begin transaction: {e}") from e
@@ -358,6 +360,7 @@ class SQLPyHelper:
         """Commit the current transaction."""
         try:
             self.connection.commit()
+            self._in_transaction = False
             logger.info("Transaction committed on %s database", self.db_type)
         except Exception as e:
             raise QueryError(f"Failed to commit transaction: {e}") from e
@@ -366,6 +369,7 @@ class SQLPyHelper:
         """Roll back the current transaction."""
         try:
             self.connection.rollback()
+            self._in_transaction = False
             logger.info("Transaction rolled back on %s database", self.db_type)
         except Exception as e:
             raise QueryError(f"Failed to rollback transaction: {e}") from e
