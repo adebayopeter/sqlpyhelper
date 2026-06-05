@@ -3,21 +3,23 @@ SQLPyHelper test suite.
 All tests use mocking — no live database required.
 Run with: pytest test/ -v
 """
+
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, call
+
 from sqlpyhelper.db_helper import (
-    SQLPyHelper,
-    SQLPyHelperError,
+    BackupError,
     ConnectionError,
     QueryError,
-    BackupError,
+    SQLPyHelper,
     _validate_identifier,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_db(db_type="sqlite", mock_connect=None):
     """
@@ -31,35 +33,58 @@ def make_db(db_type="sqlite", mock_connect=None):
     if mock_connect is not None:
         mock_connect.return_value = mock_conn
 
-    with patch.dict("os.environ", {
-        "DB_TYPE": db_type,
-        "DB_HOST": "localhost",
-        "DB_USER": "user",
-        "DB_PASSWORD": "password",
-        "DB_NAME": "testdb",
-    }):
+    with patch.dict(
+        "os.environ",
+        {
+            "DB_TYPE": db_type,
+            "DB_HOST": "localhost",
+            "DB_USER": "user",
+            "DB_PASSWORD": "password",
+            "DB_NAME": "testdb",
+        },
+    ):
         if db_type == "sqlite":
             with patch("sqlite3.connect", return_value=mock_conn):
                 db = SQLPyHelper(db_type="sqlite", database=":memory:")
         elif db_type == "postgres":
             with patch("psycopg2.connect", return_value=mock_conn):
-                db = SQLPyHelper(db_type="postgres", host="localhost",
-                                 user="user", password="pass", database="testdb")
+                db = SQLPyHelper(
+                    db_type="postgres",
+                    host="localhost",
+                    user="user",
+                    password="pass",
+                    database="testdb",
+                )
         elif db_type == "mysql":
             with patch("mysql.connector.connect", return_value=mock_conn):
-                db = SQLPyHelper(db_type="mysql", host="localhost",
-                                 user="user", password="pass", database="testdb")
+                db = SQLPyHelper(
+                    db_type="mysql",
+                    host="localhost",
+                    user="user",
+                    password="pass",
+                    database="testdb",
+                )
         elif db_type == "sqlserver":
             with patch("pyodbc.connect", return_value=mock_conn):
-                db = SQLPyHelper(db_type="sqlserver", host="localhost",
-                                 user="user", password="pass", database="testdb",
-                                 driver="ODBC Driver 17 for SQL Server")
+                db = SQLPyHelper(
+                    db_type="sqlserver",
+                    host="localhost",
+                    user="user",
+                    password="pass",
+                    database="testdb",
+                    driver="ODBC Driver 17 for SQL Server",
+                )
         elif db_type == "oracle":
             with patch("oracledb.connect", return_value=mock_conn):
                 with patch("oracledb.makedsn", return_value="mock_dsn"):
-                    db = SQLPyHelper(db_type="oracle", host="localhost",
-                                     user="user", password="pass", database="testdb",
-                                     oracle_sid="XE")
+                    db = SQLPyHelper(
+                        db_type="oracle",
+                        host="localhost",
+                        user="user",
+                        password="pass",
+                        database="testdb",
+                        oracle_sid="XE",
+                    )
 
     db.connection = mock_conn
     db.cursor = mock_cursor
@@ -69,6 +94,7 @@ def make_db(db_type="sqlite", mock_connect=None):
 # ---------------------------------------------------------------------------
 # _validate_identifier
 # ---------------------------------------------------------------------------
+
 
 class TestValidateIdentifier:
 
@@ -113,29 +139,40 @@ class TestValidateIdentifier:
 # __init__ — connection setup
 # ---------------------------------------------------------------------------
 
+
 class TestInit:
 
     def test_sqlite_connects(self):
         mock_conn = MagicMock()
         mock_conn.cursor.return_value = MagicMock()
         with patch("sqlite3.connect", return_value=mock_conn) as mock_connect:
-            db = SQLPyHelper(db_type="sqlite", database=":memory:")
+            SQLPyHelper(db_type="sqlite", database=":memory:")
             mock_connect.assert_called_once_with(":memory:")
 
     def test_postgres_connects(self):
         mock_conn = MagicMock()
         mock_conn.cursor.return_value = MagicMock()
         with patch("psycopg2.connect", return_value=mock_conn) as mock_connect:
-            db = SQLPyHelper(db_type="postgres", host="localhost",
-                             user="user", password="pass", database="testdb")
+            SQLPyHelper(
+                db_type="postgres",
+                host="localhost",
+                user="user",
+                password="pass",
+                database="testdb",
+            )
             mock_connect.assert_called_once()
 
     def test_mysql_connects(self):
         mock_conn = MagicMock()
         mock_conn.cursor.return_value = MagicMock()
         with patch("mysql.connector.connect", return_value=mock_conn) as mock_connect:
-            db = SQLPyHelper(db_type="mysql", host="localhost",
-                             user="user", password="pass", database="testdb")
+            SQLPyHelper(
+                db_type="mysql",
+                host="localhost",
+                user="user",
+                password="pass",
+                database="testdb",
+            )
             mock_connect.assert_called_once()
 
     def test_unsupported_db_type_raises(self):
@@ -157,6 +194,7 @@ class TestInit:
 # ---------------------------------------------------------------------------
 # Context manager
 # ---------------------------------------------------------------------------
+
 
 class TestContextManager:
 
@@ -188,6 +226,7 @@ class TestContextManager:
 # execute_query
 # ---------------------------------------------------------------------------
 
+
 class TestExecuteQuery:
 
     def test_executes_without_params(self):
@@ -199,7 +238,9 @@ class TestExecuteQuery:
     def test_executes_with_params(self):
         db, mock_conn, mock_cursor = make_db("sqlite")
         db.execute_query("SELECT * FROM users WHERE id = ?", (1,))
-        mock_cursor.execute.assert_called_once_with("SELECT * FROM users WHERE id = ?", (1,))
+        mock_cursor.execute.assert_called_once_with(
+            "SELECT * FROM users WHERE id = ?", (1,)
+        )
 
     def test_raises_query_error_on_failure(self):
         db, _, mock_cursor = make_db("sqlite")
@@ -211,6 +252,7 @@ class TestExecuteQuery:
 # ---------------------------------------------------------------------------
 # fetch_one / fetch_all
 # ---------------------------------------------------------------------------
+
 
 class TestFetch:
 
@@ -244,6 +286,7 @@ class TestFetch:
 # fetch_by_param
 # ---------------------------------------------------------------------------
 
+
 class TestFetchByParam:
 
     def test_fetches_with_sqlite_placeholder(self):
@@ -257,7 +300,7 @@ class TestFetchByParam:
     def test_fetches_with_mysql_placeholder(self):
         db, _, mock_cursor = make_db("mysql")
         mock_cursor.fetchall.return_value = [(1, "Alice")]
-        result = db.fetch_by_param("users", "name", "Alice")
+        db.fetch_by_param("users", "name", "Alice")
         call_args = mock_cursor.execute.call_args
         assert "%s" in call_args[0][0]
 
@@ -275,6 +318,7 @@ class TestFetchByParam:
 # ---------------------------------------------------------------------------
 # close
 # ---------------------------------------------------------------------------
+
 
 class TestClose:
 
@@ -294,6 +338,7 @@ class TestClose:
 # ---------------------------------------------------------------------------
 # create_table
 # ---------------------------------------------------------------------------
+
 
 class TestCreateTable:
 
@@ -319,6 +364,7 @@ class TestCreateTable:
 # ---------------------------------------------------------------------------
 # insert_bulk
 # ---------------------------------------------------------------------------
+
 
 class TestInsertBulk:
 
@@ -353,6 +399,7 @@ class TestInsertBulk:
 # backup_table
 # ---------------------------------------------------------------------------
 
+
 class TestBackupTable:
 
     def test_writes_csv_file(self, tmp_path):
@@ -375,6 +422,7 @@ class TestBackupTable:
 # ---------------------------------------------------------------------------
 # transaction management
 # ---------------------------------------------------------------------------
+
 
 class TestTransactions:
 
@@ -409,6 +457,7 @@ class TestTransactions:
 # reconnect
 # ---------------------------------------------------------------------------
 
+
 class TestReconnect:
 
     def test_reconnect_closes_and_reinits(self):
@@ -430,6 +479,7 @@ class TestReconnect:
 # ---------------------------------------------------------------------------
 # insert_dynamic
 # ---------------------------------------------------------------------------
+
 
 class TestInsertDynamic:
 
@@ -463,6 +513,7 @@ class TestInsertDynamic:
 # connection pool
 # ---------------------------------------------------------------------------
 
+
 class TestConnectionPool:
 
     def test_postgres_pool_setup(self):
@@ -475,7 +526,9 @@ class TestConnectionPool:
     def test_mysql_pool_setup(self):
         db, _, _ = make_db("mysql")
         mock_pool = MagicMock()
-        with patch("mysql.connector.pooling.MySQLConnectionPool", return_value=mock_pool):
+        with patch(
+            "mysql.connector.pooling.MySQLConnectionPool", return_value=mock_pool
+        ):
             db.setup_connection_pool()
         assert db.pool == mock_pool
 

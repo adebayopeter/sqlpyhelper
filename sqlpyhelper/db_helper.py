@@ -1,9 +1,10 @@
 import csv
-from dotenv import load_dotenv
 import logging
 import os
 import re
-from typing import Any, Optional
+from typing import Any, Literal, Optional
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -21,7 +22,7 @@ def _validate_identifier(name: str) -> str:
     Allows only alphanumeric characters and underscores.
     Raises ValueError for anything else, preventing SQL injection via identifiers.
     """
-    if not re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', name):
+    if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", name):
         raise ValueError(
             f"Invalid SQL identifier: {name!r}. "
             "Only letters, digits, and underscores are allowed."
@@ -47,15 +48,15 @@ class BackupError(SQLPyHelperError):
 
 class SQLPyHelper:
     def __init__(
-            self,
-            db_type: Optional[str] = None,
-            host: Optional[str] = None,
-            user: Optional[str] = None,
-            password: Optional[str] = None,
-            database: Optional[str] = None,
-            driver: Optional[str] = None,
-            port: Optional[str] = None,
-            oracle_sid: Optional[str] = None
+        self,
+        db_type: Optional[str] = None,
+        host: Optional[str] = None,
+        user: Optional[str] = None,
+        password: Optional[str] = None,
+        database: Optional[str] = None,
+        driver: Optional[str] = None,
+        port: Optional[str] = None,
+        oracle_sid: Optional[str] = None,
     ) -> None:
 
         # Store original params so reconnect() can replay them
@@ -70,7 +71,7 @@ class SQLPyHelper:
             "oracle_sid": oracle_sid,
         }
 
-        self.db_type: str = (db_type or os.getenv("DB_TYPE", "")).lower()
+        self.db_type: str = (db_type or os.getenv("DB_TYPE") or "").lower()
         self.host: Optional[str] = host or os.getenv("DB_HOST")
         self.user: Optional[str] = user or os.getenv("DB_USER")
         self.password: Optional[str] = password or os.getenv("DB_PASSWORD")
@@ -85,26 +86,43 @@ class SQLPyHelper:
 
         if self.db_type == "sqlite":
             import sqlite3
+
             self.connection = sqlite3.connect(self.database)
         elif self.db_type == "postgres":
             import psycopg2
-            self.connection = psycopg2.connect(host=self.host, user=self.user,
-                                               password=self.password, dbname=self.database)
+
+            self.connection = psycopg2.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                dbname=self.database,
+            )
         elif self.db_type == "mysql":
             import mysql.connector
-            self.connection = mysql.connector.connect(host=self.host, user=self.user,
-                                                      password=self.password, database=self.database)
+
+            self.connection = mysql.connector.connect(
+                host=self.host,
+                user=self.user,
+                password=self.password,
+                database=self.database,
+            )  # type: ignore[assignment]
         elif self.db_type == "sqlserver":
             import pyodbc
+
             self.connection = pyodbc.connect(
                 f"DRIVER={self.driver};SERVER={self.host};DATABASE={self.database};"
                 f"UID={self.user};PWD={self.password}"
             )
         elif self.db_type == "oracle":
             import oracledb
+
             oracle_port = os.getenv("ORACLE_DB_PORT", 1521)
-            dsn = oracledb.makedsn(self.host, oracle_port, sid=self.oracle_sid)
-            self.connection = oracledb.connect(user=self.user, password=self.password, dsn=dsn)
+            dsn = oracledb.makedsn(
+                self.host, oracle_port, sid=self.oracle_sid  # type: ignore[arg-type]
+            )
+            self.connection = oracledb.connect(
+                user=self.user, password=self.password, dsn=dsn
+            )  # type: ignore[assignment]
         else:
             raise ValueError("Unsupported database type")
 
@@ -113,7 +131,7 @@ class SQLPyHelper:
     def __enter__(self) -> "SQLPyHelper":
         return self
 
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> Literal[False]:
         self.close()
         return False
 
@@ -126,9 +144,11 @@ class SQLPyHelper:
                 self.cursor.execute(query)
             self.connection.commit()
         except Exception as e:
-            if "server has gone away" in str(e):  # Example check for MySQL lost connection
+            if "server has gone away" in str(
+                e
+            ):  # Example check for MySQL lost connection
                 self.reconnect()
-                self.cursor.execute(query, params)
+                self.cursor.execute(query, params)  # type: ignore[arg-type]
                 self.connection.commit()
             else:
                 raise QueryError(f"Query failed: {e}") from e
@@ -147,7 +167,9 @@ class SQLPyHelper:
         except Exception as e:
             raise QueryError(f"Failed to fetch rows: {e}") from e
 
-    def fetch_by_param(self, table_name: str, column_name: str, value: Any) -> list[tuple]:
+    def fetch_by_param(
+        self, table_name: str, column_name: str, value: Any
+    ) -> list[tuple]:
         """Fetches rows from a table where a column matches the given value."""
         try:
             table_name = _validate_identifier(table_name)
@@ -175,8 +197,12 @@ class SQLPyHelper:
         """
         try:
             table_name = _validate_identifier(table_name)
-            validated_cols = {_validate_identifier(col): dtype for col, dtype in columns.items()}
-            columns_def = ", ".join([f"{col} {dtype}" for col, dtype in validated_cols.items()])
+            validated_cols = {
+                _validate_identifier(col): dtype for col, dtype in columns.items()
+            }
+            columns_def = ", ".join(
+                [f"{col} {dtype}" for col, dtype in validated_cols.items()]
+            )
             query = f"CREATE TABLE IF NOT EXISTS {table_name} ({columns_def})"
             self.execute_query(query)
         except Exception as e:
@@ -216,32 +242,45 @@ class SQLPyHelper:
 
             with open(backup_file, mode="w", newline="") as file:
                 writer = csv.writer(file)
-                writer.writerow([desc[0] for desc in self.cursor.description])  # Column headers
+                writer.writerow(
+                    [desc[0] for desc in self.cursor.description]
+                )  # Column headers
                 writer.writerows(rows)
         except Exception as e:
             raise BackupError(f"Failed to backup table: {e}") from e
 
     def setup_connection_pool(
-            self, min_conn: int = 1, max_conn: int = 5, pool_size: int = 5
+        self, min_conn: int = 1, max_conn: int = 5, pool_size: int = 5
     ) -> None:
         """Sets up connection pooling based on the database type"""
         try:
             if self.db_type == "postgres":
                 from psycopg2 import pool
-                self.pool = pool.SimpleConnectionPool(min_conn, max_conn,
-                                                      host=self.host, user=self.user,
-                                                      password=self.password, dbname=self.database)
+
+                self.pool = pool.SimpleConnectionPool(
+                    min_conn,
+                    max_conn,
+                    host=self.host,
+                    user=self.user,
+                    password=self.password,
+                    dbname=self.database,
+                )
 
             elif self.db_type == "mysql":
                 import mysql.connector.pooling
+
                 self.pool = mysql.connector.pooling.MySQLConnectionPool(
-                    pool_name="mypool", pool_size=pool_size,
-                    host=self.host, user=self.user,
-                    password=self.password, database=self.database
+                    pool_name="mypool",
+                    pool_size=pool_size,
+                    host=self.host,
+                    user=self.user,
+                    password=self.password,
+                    database=self.database,
                 )
 
             elif self.db_type == "sqlserver":
                 import pyodbc
+
                 self.pool = [
                     pyodbc.connect(
                         f"DRIVER={self.driver};SERVER={self.host};DATABASE={self.database};"
@@ -252,10 +291,17 @@ class SQLPyHelper:
 
             elif self.db_type == "oracle":
                 import oracledb
+
                 oracle_port = os.getenv("ORACLE_DB_PORT", 1521)
-                dsn = oracledb.makedsn(self.host, oracle_port, sid=self.oracle_sid)
-                self.pool = oracledb.create_pool(user=self.user, password=self.password, dsn=dsn,
-                                                 min=min_conn, max=max_conn, increment=1)
+                dsn = oracledb.makedsn(self.host, oracle_port, sid=self.oracle_sid)  # type: ignore[arg-type]
+                self.pool = oracledb.create_pool(
+                    user=self.user,
+                    password=self.password,
+                    dsn=dsn,
+                    min=min_conn,
+                    max=max_conn,
+                    increment=1,
+                )
 
             else:
                 raise ValueError(f"Connection pooling not supported for {self.db_type}")
@@ -270,7 +316,9 @@ class SQLPyHelper:
         """Returns a connection back to the pool."""
         conn = connection or self.connection
         if self.pool is None:
-            raise RuntimeError("No connection pool initialised. Call setup_connection_pool() first.")
+            raise RuntimeError(
+                "No connection pool initialised. Call setup_connection_pool() first."
+            )
 
         if self.db_type == "postgres":
             self.pool.putconn(conn)
@@ -285,7 +333,7 @@ class SQLPyHelper:
         """Reconnects to the database if connection is lost"""
         try:
             self.connection.close()
-            self.__init__(**self._init_kwargs)
+            self.__init__(**self._init_kwargs)  # type: ignore[misc]
             print("Database reconnected successfully.")
         except Exception as e:
             raise ConnectionError(f"Reconnection failed: {e}") from e

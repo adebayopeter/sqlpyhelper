@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.5] - 2026-06-05
+
+### Added
+- Python logging module replacing unused log_query() function
+- Full type annotations on all public methods
+- commit_transaction() method for explicit transaction commits
+- pre-commit.sh script for local code quality checks
+
+### Changed
+- Replaced deprecated cx_Oracle with python-oracledb
+- begin_transaction() is now database-agnostic (correct syntax per DB)
+- rollback_transaction() uses connection.rollback() directly
+- Replaced print() in reconnect() with logger.info()
+
+### Fixed
+- Type annotations compatible with Python 3.8/3.9 using typing module
+
 ## [0.1.4] - 2026-06-04
 
 ### Security

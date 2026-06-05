@@ -1,9 +1,9 @@
 # Match the version in setup.py
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
-from sqlpyhelper.db_helper import (
-    SQLPyHelperError,
+from sqlpyhelper.db_helper import (  # noqa: F401
+    BackupError,
     ConnectionError,
     QueryError,
-    BackupError,
+    SQLPyHelperError,
 )

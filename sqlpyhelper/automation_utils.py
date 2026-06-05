@@ -1,9 +1,11 @@
-import pandas as pd
-from sqlpyhelper.db_helper import SQLPyHelper
-import subprocess
-from datetime import datetime
 import os
 import shutil
+import subprocess
+from datetime import datetime
+
+import pandas as pd
+
+from sqlpyhelper.db_helper import SQLPyHelper
 
 
 class AutomationUtils:
@@ -43,12 +45,17 @@ class AutomationUtils:
                 subprocess.run(
                     [
                         "pg_dump",
-                        "-h", host,
-                        "-p", port,
-                        "-U", user,
+                        "-h",
+                        host,
+                        "-p",
+                        port,
+                        "-U",
+                        user,
                         db_name,
-                        "-F", "c",
-                        "-f", filepath,
+                        "-F",
+                        "c",
+                        "-f",
+                        filepath,
                     ],
                     check=True,
                     shell=False,
@@ -82,7 +89,7 @@ class AutomationUtils:
             entity_column (str): Column representing entity ID.
             date_column (str): Column representing timestamp/date.
         """
-        if self.db.db_type == 'sqlite':
+        if self.db.db_type == "sqlite":
             month_expr = f"strftime('%Y-%m', {date_column})"
         else:
             month_expr = f"DATE_TRUNC('month', {date_column})"
@@ -95,7 +102,9 @@ class AutomationUtils:
         self.db.execute_query(query)
         return self.db.fetch_all()
 
-    def aggregate_column(self, table, value_column, group_column=None, time_column=None):
+    def aggregate_column(
+        self, table, value_column, group_column=None, time_column=None
+    ):
         """
         Computes sum of any value column grouped by entity or month.
 
@@ -105,7 +114,7 @@ class AutomationUtils:
             group_column (str, optional): Entity or category to group by.
             time_column (str, optional): Timestamp to extract month grouping.
         """
-        if self.db.db_type == 'sqlite':
+        if self.db.db_type == "sqlite":
             month_expr = f"strftime('%Y-%m', {time_column})"
         else:
             month_expr = f"DATE_TRUNC('month', {time_column})"
@@ -133,11 +142,13 @@ class AutomationUtils:
             threshold (int): Number of standard deviations from mean to flag as outlier.
         """
         query = f"""
-            SELECT *, {numeric_column} 
-            AS value FROM {table}
+        SELECT *, {numeric_column} AS value FROM {table}
         """
         self.db.execute_query(query)
-        data = pd.DataFrame(self.db.fetch_all(), columns=[desc[0] for desc in self.db.cursor.description])
+        data = pd.DataFrame(
+            self.db.fetch_all(),
+            columns=[desc[0] for desc in self.db.cursor.description],
+        )
 
         mean_val = data["value"].mean()
         std_val = data["value"].std()
