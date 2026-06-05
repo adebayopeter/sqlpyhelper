@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name='SQLPyHelper',
-    version='0.1.5',
+    version='0.1.6',
     description='A simple SQL database helper package for Python.',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -38,6 +38,7 @@ setup(
         "sqlserver", "oracle", "db", "query", "helper",
     ],
     project_urls={
+        "Documentation": "https://sqlpyhelper.readthedocs.io/en/latest/",
         "Source": "https://github.com/adebayopeter/sqlpyhelper",
         "Bug Tracker": "https://github.com/adebayopeter/sqlpyhelper/issues",
         "Changelog": "https://github.com/adebayopeter/sqlpyhelper/blob/main/CHANGELOG.md",

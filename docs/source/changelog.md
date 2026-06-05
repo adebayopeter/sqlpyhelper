@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6] - 2026-06-05
+
+### Added
+- ReadTheDocs documentation site at https://sqlpyhelper.readthedocs.io
+- Documentation badge in README
+- Documentation link in PyPI project_urls
+
 ## [0.1.5] - 2026-06-05
 
 ### Added
