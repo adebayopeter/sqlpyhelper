@@ -1,9 +1,18 @@
 import csv
 from dotenv import load_dotenv
+import logging
 import os
 import re
+from typing import Any, Optional
 
-load_dotenv()  # Load environment variables from .env file
+load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("sqlpyhelper")
 
 
 def _validate_identifier(name: str) -> str:
@@ -37,8 +46,17 @@ class BackupError(SQLPyHelperError):
 
 
 class SQLPyHelper:
-    def __init__(self, db_type=None, host=None, user=None, password=None,
-                 database=None, driver=None, port=None, oracle_sid=None):
+    def __init__(
+            self,
+            db_type: Optional[str] = None,
+            host: Optional[str] = None,
+            user: Optional[str] = None,
+            password: Optional[str] = None,
+            database: Optional[str] = None,
+            driver: Optional[str] = None,
+            port: Optional[str] = None,
+            oracle_sid: Optional[str] = None
+    ) -> None:
 
         # Store original params so reconnect() can replay them
         self._init_kwargs = {
@@ -52,15 +70,15 @@ class SQLPyHelper:
             "oracle_sid": oracle_sid,
         }
 
-        self.db_type = db_type or os.getenv("DB_TYPE").lower()
-        self.host = host or os.getenv("DB_HOST")
-        self.user = user or os.getenv("DB_USER")
-        self.password = password or os.getenv("DB_PASSWORD")
-        self.database = database or os.getenv("DB_NAME")
-        self.driver = driver or os.getenv("DB_DRIVER")
-        self.port = port or os.getenv("DB_PORT")
-        self.oracle_sid = oracle_sid or os.getenv("ORACLE_SID")
-        self.pool = None
+        self.db_type: str = (db_type or os.getenv("DB_TYPE", "")).lower()
+        self.host: Optional[str] = host or os.getenv("DB_HOST")
+        self.user: Optional[str] = user or os.getenv("DB_USER")
+        self.password: Optional[str] = password or os.getenv("DB_PASSWORD")
+        self.database: Optional[str] = database or os.getenv("DB_NAME")
+        self.driver: Optional[str] = driver or os.getenv("DB_DRIVER")
+        self.port: Optional[str] = port or os.getenv("DB_PORT")
+        self.oracle_sid: Optional[str] = oracle_sid or os.getenv("ORACLE_SID")
+        self.pool: Any = None
 
         if not self.db_type or not self.database:
             raise ValueError("Missing required database configuration.")
@@ -78,26 +96,28 @@ class SQLPyHelper:
                                                       password=self.password, database=self.database)
         elif self.db_type == "sqlserver":
             import pyodbc
-            self.connection = pyodbc.connect(f"DRIVER={self.driver};SERVER={self.host};DATABASE={self.database};"
-                                             f"UID={self.user};PWD={self.password}")
+            self.connection = pyodbc.connect(
+                f"DRIVER={self.driver};SERVER={self.host};DATABASE={self.database};"
+                f"UID={self.user};PWD={self.password}"
+            )
         elif self.db_type == "oracle":
-            import cx_Oracle
-            oracle_port = os.getenv("ORACLE_DB_PORT", "1521")  # Default to 1521 if not set
-            dsn = cx_Oracle.makedsn(self.host, oracle_port, self.oracle_sid)
-            self.connection = cx_Oracle.connect(self.user, self.password, dsn)
+            import oracledb
+            oracle_port = os.getenv("ORACLE_DB_PORT", 1521)
+            dsn = oracledb.makedsn(self.host, oracle_port, sid=self.oracle_sid)
+            self.connection = oracledb.connect(user=self.user, password=self.password, dsn=dsn)
         else:
             raise ValueError("Unsupported database type")
 
         self.cursor = self.connection.cursor()
 
-    def __enter__(self):
+    def __enter__(self) -> "SQLPyHelper":
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
         self.close()
         return False
 
-    def execute_query(self, query, params=None):
+    def execute_query(self, query: str, params: Optional[tuple] = None) -> None:
         """Executes a query with optional parameters"""
         try:
             if params:
@@ -113,21 +133,22 @@ class SQLPyHelper:
             else:
                 raise QueryError(f"Query failed: {e}") from e
 
-    def fetch_one(self):
+    def fetch_one(self) -> Optional[tuple]:
         """Fetches a single row"""
         try:
             return self.cursor.fetchone()
         except Exception as e:
             raise QueryError(f"Failed to fetch row: {e}") from e
 
-    def fetch_all(self):
+    def fetch_all(self) -> list[tuple]:
         """Fetches all rows from the last executed query"""
         try:
             return self.cursor.fetchall()
         except Exception as e:
             raise QueryError(f"Failed to fetch rows: {e}") from e
 
-    def fetch_by_param(self, table_name, column_name, value):
+    def fetch_by_param(self, table_name: str, column_name: str, value: Any) -> list[tuple]:
+        """Fetches rows from a table where a column matches the given value."""
         try:
             table_name = _validate_identifier(table_name)
             column_name = _validate_identifier(column_name)
@@ -138,15 +159,15 @@ class SQLPyHelper:
         except Exception as e:
             raise QueryError(f"Failed to fetch by param: {e}") from e
 
-    def close(self):
-        """Closes the connection"""
+    def close(self) -> None:
+        """Closes the cursor and database connection."""
         try:
             self.cursor.close()
             self.connection.close()
         except Exception as e:
             raise ConnectionError(f"Failed to close connection: {e}") from e
 
-    def create_table(self, table_name, columns):
+    def create_table(self, table_name: str, columns: dict[str, str]) -> None:
         """
         Creates a table dynamically using a dictionary format.
         Example:
@@ -161,7 +182,7 @@ class SQLPyHelper:
         except Exception as e:
             raise QueryError(f"Failed to create table: {e}") from e
 
-    def insert_bulk(self, table_name, data):
+    def insert_bulk(self, table_name: str, data: list[dict[str, Any]]) -> None:
         """
         Inserts multiple rows at once.
         Example:
@@ -181,7 +202,7 @@ class SQLPyHelper:
         except Exception as e:
             raise QueryError(f"Failed to insert bulk rows: {e}") from e
 
-    def backup_table(self, table_name, backup_file):
+    def backup_table(self, table_name: str, backup_file: str) -> None:
         """
         Exports table data into a CSV file.
         Example:
@@ -200,7 +221,9 @@ class SQLPyHelper:
         except Exception as e:
             raise BackupError(f"Failed to backup table: {e}") from e
 
-    def setup_connection_pool(self, min_conn=1, max_conn=5, pool_size=5):
+    def setup_connection_pool(
+            self, min_conn: int = 1, max_conn: int = 5, pool_size: int = 5
+    ) -> None:
         """Sets up connection pooling based on the database type"""
         try:
             if self.db_type == "postgres":
@@ -211,36 +234,39 @@ class SQLPyHelper:
 
             elif self.db_type == "mysql":
                 import mysql.connector.pooling
-                self.pool = mysql.connector.pooling.MySQLConnectionPool(pool_name="mypool",
-                                                                        pool_size=pool_size, host=self.host,
-                                                                        user=self.user, password=self.password,
-                                                                        database=self.database)
+                self.pool = mysql.connector.pooling.MySQLConnectionPool(
+                    pool_name="mypool", pool_size=pool_size,
+                    host=self.host, user=self.user,
+                    password=self.password, database=self.database
+                )
 
             elif self.db_type == "sqlserver":
                 import pyodbc
                 self.pool = [
-                    pyodbc.connect(f"DRIVER={self.driver};SERVER={self.host};DATABASE={self.database};"
-                                   f"UID={self.user};PWD={self.password};ConnectionPooling=Yes")
+                    pyodbc.connect(
+                        f"DRIVER={self.driver};SERVER={self.host};DATABASE={self.database};"
+                        f"UID={self.user};PWD={self.password};ConnectionPooling=Yes"
+                    )
                     for _ in range(pool_size)
                 ]
 
             elif self.db_type == "oracle":
-                import cx_Oracle
-                oracle_port = os.getenv("ORACLE_DB_PORT", "1521")  # Default Oracle port
-                dsn = cx_Oracle.makedsn(self.host, oracle_port, self.oracle_sid)
-                self.pool = cx_Oracle.SessionPool(user=self.user, password=self.password, dsn=dsn,
-                                                  min=min_conn, max=max_conn, increment=1, threaded=True)
+                import oracledb
+                oracle_port = os.getenv("ORACLE_DB_PORT", 1521)
+                dsn = oracledb.makedsn(self.host, oracle_port, sid=self.oracle_sid)
+                self.pool = oracledb.create_pool(user=self.user, password=self.password, dsn=dsn,
+                                                 min=min_conn, max=max_conn, increment=1)
 
             else:
                 raise ValueError(f"Connection pooling not supported for {self.db_type}")
         except Exception as e:
             raise ConnectionError(f"Failed to set up connection pool: {e}") from e
 
-    def get_connection_from_pool(self):
+    def get_connection_from_pool(self) -> Any:
         """Fetches a connection from the pool."""
         return self.pool.get_connection()
 
-    def return_connection_to_pool(self, connection=None) -> None:
+    def return_connection_to_pool(self, connection: Any = None) -> None:
         """Returns a connection back to the pool."""
         conn = connection or self.connection
         if self.pool is None:
@@ -255,7 +281,7 @@ class SQLPyHelper:
         else:
             conn.close()
 
-    def reconnect(self):
+    def reconnect(self) -> None:
         """Reconnects to the database if connection is lost"""
         try:
             self.connection.close()
@@ -264,13 +290,38 @@ class SQLPyHelper:
         except Exception as e:
             raise ConnectionError(f"Reconnection failed: {e}") from e
 
-    def begin_transaction(self):
-        self.execute_query("START TRANSACTION")
+    def begin_transaction(self) -> None:
+        """Begin an explicit transaction. Works across all supported databases."""
+        try:
+            if self.db_type == "sqlite":
+                self.execute_query("BEGIN")
+            elif self.db_type in ("postgres", "mysql"):
+                self.execute_query("START TRANSACTION")
+            elif self.db_type == "sqlserver":
+                self.execute_query("BEGIN TRANSACTION")
+            elif self.db_type == "oracle":
+                pass  # Oracle starts transactions implicitly on first DML statement
+            logger.info("Transaction started on %s database", self.db_type)
+        except Exception as e:
+            raise QueryError(f"Failed to begin transaction: {e}") from e
 
-    def rollback_transaction(self):
-        self.execute_query("ROLLBACK")
+    def commit_transaction(self) -> None:
+        """Commit the current transaction."""
+        try:
+            self.connection.commit()
+            logger.info("Transaction committed on %s database", self.db_type)
+        except Exception as e:
+            raise QueryError(f"Failed to commit transaction: {e}") from e
 
-    def insert_dynamic(self, table, data: dict):
+    def rollback_transaction(self) -> None:
+        """Roll back the current transaction."""
+        try:
+            self.connection.rollback()
+            logger.info("Transaction rolled back on %s database", self.db_type)
+        except Exception as e:
+            raise QueryError(f"Failed to rollback transaction: {e}") from e
+
+    def insert_dynamic(self, table: str, data: dict[str, Any]) -> None:
         """
         Dynamically constructs and executes an INSERT query with database-specific placeholders.
         """

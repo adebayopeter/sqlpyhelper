@@ -25,12 +25,12 @@ setup(
         "postgres": ["psycopg2"],
         "mysql": ["mysql-connector-python"],
         "sqlserver": ["pyodbc"],
-        "oracle": ["cx_Oracle"],
+        "oracle": ["oracledb"],
         "all": [
             "psycopg2",
             "mysql-connector-python",
             "pyodbc",
-            "cx_Oracle",
+            "oracledb",
         ],
     },
     keywords=[

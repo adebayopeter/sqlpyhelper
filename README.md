@@ -10,7 +10,7 @@ SQLPyHelper is a lightweight Python library that gives you a single, consistent 
 
 If you need to run queries, manage transactions, pool connections, or back up tables across multiple database types without learning SQLAlchemy's abstraction layer or wiring up five different drivers manually, SQLPyHelper handles that boilerplate for you.
 
-```sh
+```python
 # Works identically across all five supported databases
 with SQLPyHelper(db_type="postgres", host="localhost", user="user", 
                  password="pass", database="mydb") as db:
@@ -173,6 +173,7 @@ db.return_connection_to_pool(conn)
 | `return_connection_to_pool(conn)` | Returns connection back to pool. |
 | `begin_transaction()` | Begins an **explicit transaction**. |
 | `rollback_transaction()` | Rolls back **uncommitted transactions**. |
+| `commit_transaction()` | Commits the current transaction. |
 | `close()` | Closes the database connection safely. |
 | `__enter__` / `__exit__()` | Use as a context manager — connection closes automatically. |
 
