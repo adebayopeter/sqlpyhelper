@@ -28,7 +28,7 @@ Example usage::
 
 import logging
 import os
-from typing import Any, Optional
+from typing import Any, List, Optional, Tuple
 
 from dotenv import load_dotenv
 
@@ -190,7 +190,7 @@ class AsyncSQLPyHelper:
                 "No active connection. Call connect() or use async with."
             )
 
-    def _adapt_query(self, query: str, args: tuple) -> tuple[str, tuple]:
+    def _adapt_query(self, query: str, args: tuple) -> Tuple[str, tuple]:
         """
         Adapt a query and its arguments for the active database driver.
 
@@ -320,7 +320,7 @@ class AsyncSQLPyHelper:
         except Exception as e:
             raise AsyncQueryError(f"fetch_one failed: {e}") from e
 
-    async def fetch_all(self, query: str, *args: Any) -> list[Any]:
+    async def fetch_all(self, query: str, *args: Any) -> List[Any]:
         """
         Execute a SELECT query and return all rows.
 
@@ -409,7 +409,7 @@ class AsyncSQLPyHelper:
         except Exception as e:
             raise AsyncQueryError(f"fetch_val failed: {e}") from e
 
-    async def execute_many(self, query: str, args_list: list[tuple]) -> None:
+    async def execute_many(self, query: str, args_list: List[tuple]) -> None:
         """
         Execute a SQL statement multiple times with different parameters.
         Efficient for bulk inserts::
