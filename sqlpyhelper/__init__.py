@@ -1,5 +1,5 @@
 # Match the version in setup.py
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 from sqlpyhelper.async_helper import (  # noqa: F401
     AsyncConnectionError,

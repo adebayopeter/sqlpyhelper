@@ -24,7 +24,7 @@ Example usage::
 """
 
 import logging
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("sqlpyhelper.migration")
 
@@ -41,7 +41,7 @@ class MigrationError(Exception):
 # Generic types are normalised from the source cursor description.
 
 
-_TYPE_MAP: dict[str, dict[str, str]] = {
+_TYPE_MAP: Dict[str, Dict[str, str]] = {
     "sqlite": {
         "integer": "INTEGER",
         "real": "REAL",
@@ -149,7 +149,7 @@ def _map_type(raw_type: Optional[str], target_db: str) -> str:
     return target_types.get(generic, "TEXT")
 
 
-def _get_column_info(source: Any, table: str) -> list[tuple[str, str]]:
+def _get_column_info(source: Any, table: str) -> List[Tuple[str, str]]:
     """
     Return a list of (column_name, raw_type_string) tuples
     by inspecting the source database schema.
@@ -216,7 +216,7 @@ def _get_column_info(source: Any, table: str) -> list[tuple[str, str]]:
 
 def _build_create_table_sql(
     table: str,
-    columns: list[tuple[str, str]],
+    columns: List[Tuple[str, str]],
     target_db: str,
 ) -> str:
     """Build a CREATE TABLE IF NOT EXISTS statement for the target database."""
@@ -228,7 +228,7 @@ def _build_create_table_sql(
 
 def _build_insert_sql(
     table: str,
-    column_names: list[str],
+    column_names: List[str],
     target_db: str,
 ) -> str:
     """Build a parameterised INSERT statement for the target database."""
@@ -250,7 +250,7 @@ def migrate_table(
     create_table: bool = True,
     batch_size: int = 500,
     truncate_target: bool = False,
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """
     Migrate a table from one database to another.
 

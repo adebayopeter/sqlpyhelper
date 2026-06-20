@@ -2,7 +2,7 @@ import csv
 import logging
 import os
 import re
-from typing import Any, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from dotenv import load_dotenv
 
@@ -162,7 +162,7 @@ class SQLPyHelper:
         except Exception as e:
             raise QueryError(f"Failed to fetch row: {e}") from e
 
-    def fetch_all(self) -> list[tuple]:
+    def fetch_all(self) -> List[tuple]:
         """Fetches all rows from the last executed query"""
         try:
             return self.cursor.fetchall()
@@ -171,7 +171,7 @@ class SQLPyHelper:
 
     def fetch_by_param(
         self, table_name: str, column_name: str, value: Any
-    ) -> list[tuple]:
+    ) -> List[tuple]:
         """Fetches rows from a table where a column matches the given value."""
         try:
             table_name = _validate_identifier(table_name)
@@ -191,7 +191,7 @@ class SQLPyHelper:
         except Exception as e:
             raise ConnectionError(f"Failed to close connection: {e}") from e
 
-    def create_table(self, table_name: str, columns: dict[str, str]) -> None:
+    def create_table(self, table_name: str, columns: Dict[str, str]) -> None:
         """
         Creates a table dynamically using a dictionary format.
         Example:
@@ -210,7 +210,7 @@ class SQLPyHelper:
         except Exception as e:
             raise QueryError(f"Failed to create table: {e}") from e
 
-    def insert_bulk(self, table_name: str, data: list[dict[str, Any]]) -> None:
+    def insert_bulk(self, table_name: str, data: List[Dict[str, Any]]) -> None:
         """
         Inserts multiple rows at once.
         Example:
@@ -374,7 +374,7 @@ class SQLPyHelper:
         except Exception as e:
             raise QueryError(f"Failed to rollback transaction: {e}") from e
 
-    def insert_dynamic(self, table: str, data: dict[str, Any]) -> None:
+    def insert_dynamic(self, table: str, data: Dict[str, Any]) -> None:
         """
         Dynamically constructs and executes an INSERT query with database-specific placeholders.
         """

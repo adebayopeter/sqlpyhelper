@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name='SQLPyHelper',
-    version='0.2.0',
+    version='0.2.1',
     description='A simple SQL database helper package for Python.',
     long_description=long_description,
     long_description_content_type="text/markdown",

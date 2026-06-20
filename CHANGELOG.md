@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-06-19
+
+### Fixed
+- Critical: replaced all builtin generic type subscripts (list[...], 
+  dict[...], tuple[...]) with typing module equivalents (List, Dict, 
+  Tuple) throughout db_helper.py, async_helper.py, and migration.py
+- These caused TypeError: 'type' object is not subscriptable on 
+  Python 3.8, breaking the package entirely despite the declared 
+  python_requires=">=3.8"
+- Added pytest-asyncio to CI workflow — async tests were silently 
+  not running in GitHub Actions despite passing locally
+
 ## [0.2.0] - 2026-06-06
 
 ### Added

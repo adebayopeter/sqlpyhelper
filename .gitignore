@@ -30,3 +30,7 @@ build/
 
 # files to ignore
 test/my_test.py
+
+# go-live test artifacts
+go-live/*.db
+go-live/*.csv
