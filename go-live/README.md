@@ -11,6 +11,7 @@ pip install --upgrade sqlpyhelper
 pip install "sqlpyhelper[postgres]"
 pip install "sqlpyhelper[async-sqlite]"
 pip install "sqlpyhelper[async-postgres]"
+pip install pytest pytest-asyncio
 ```
 
 ## Running the tests

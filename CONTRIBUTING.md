@@ -13,7 +13,7 @@ get set up and submit a pull request.
    python -m venv venv
    source venv/bin/activate        # Windows: venv\Scripts\activate
    pip install -e ".[all]"
-   pip install pytest pytest-mock
+   pip install pytest pytest-mock pytest-asyncio
 
 3. Copy the example environment file:
    cp .env_example .env
